@@ -1,0 +1,131 @@
+### lab 04 ###
+
+#Zad1
+a) DELETE FROM postac WHERE id_postaci=5
+   DELETE FROM postac WHERE id_postaci=6
+b) ALTER TABLE postac DROP PRIMARY KEY;
+   ALTER TABLE postac MODIFY id_postaci int;
+   ALTER TABLE postac DROP PRIMARY KEY;
+   ALTER TABLE walizka DROP FOREIGN KEY walizka_ibfk_1;
+   ALTER TABLE przetwory DROP FOREIGN KEY przetwory_ibfk_1;
+   ALTER TABLE przetwory DROP FOREIGN KEY przetwory_ibfk_2;
+   ALTER TABLE izba DROP FOREIGN KEY izba_ibfk_1;
+   ALTER TABLE postac DROP PRIMARY KEY;
+
+#Zad2
+a) ALTER TABLE postac ADD pesel varchar(11) first;
+   UPDATE postac SET pesel='46353728179'+id_postaci;
+   ALTER TABLE ADD PRIMARY KEY(pesel);
+b) ALTER TABLE postac MODIFY rodzaj enum('wiking','ptak','kobieta','syrena');
+c) INSERT INTO postac(pesel, id_postaci, nazwa, rodzaj, data_ur, wiek) VALUES('45638725694', '5', '1630-12-10', 200);
+
+#Zad3
+a) UPDATE postac SET statek='Statek_Bjorna' WHERE nazwa LIKE '%a%';
+b) UPDATE statek SET max_ladownosc=max_ladownosc*0.7 WHERE data_wodowania>'1900-12-31' AND data_wodowania<'2001-01-01';
+c) ???
+
+#Zad4
+a) ALTER TABLE postac MODIFY rodzaj enum('wiking','ptak','kobieta','syrena','waz');
+   INSERT INTO postac(pesel, id_postaci, nazwa, rodzaj, data_ur, wiek, statek) VALUES('30900864532', '8', 'Loko', 'waz', 'NULL', 'NULL', 'NULL');
+b) CREATE TABLE marynarz LIKE postac; 
+c) INSERT INTO marynarz SELECT * FROM postac WHERE statek IS NOT NULL;
+
+#Zad5
+a) UPDATE postac SET statek=NULL;
+b) DELETE FROM postac WHERE id_postaci=7;
+c) DELETE FROM statek WHERE nazwa_statku=Statek_Bjorna;
+   DELETE FROM statek WHERE nazwa_statku=2;
+d) ALTER TABLE statek DROP FOREIGN KEY statek_ibfk_1;
+   DROP TABLE statek;
+e) CREATE TABLE zwierz (id int auto_increment primary key, nazwa varchar(50), wiek int unsigned);
+f) INSERT INTO zwierz(nazwa, wiek) SELECT nazwa, wiek FROM postac WHERE rodzaj='ptak' AND rodzaj='waz';
+
+
+
+
+### lab 05 ###
+
+#Zad1 
+a) CREATE TABLE kreatura SELECT * FROM wikingowie.kreatura;
+   CREATE TABLE zasob SELECT * FROM wikingowie.zasob;
+   CREATE TABLE ekwipunek SELECT * FROM wikingowie.ekwipunek;
+b) SELECT * FROM zasob;
+c) SELECT * FROM zasob WHERE rodzaj='jedzenie';
+d) SELECT * FROM zasob WHERE ilosc='1, 3, 5';
+
+#Zad2
+a) SELECT nazwa FROM kreatura WHERE rodzaj <> 'wiedzma' AND udzwig >= 50;
+b) SELECT nazwa FROM zasob WHERE waga BETWEEN 2 AND 5;
+c) SELECT nazwa FROM kreatura WHERE nazwa LIKE '%or%' AND udzwig BETWEEN 30 AND 70;
+
+#Zad3
+a) SELECT nazwa FROM zasob WHERE MONTH(dataPozyskania)=7 OR MONTH(dataPozyskania)=8;
+b) SELECT nazwa, waga from zasob WHERE rodzaj IS NOT NULL ORDER BY waga;
+c) SELECT nazwa, dataUr FROM kreatura ORDER BY dataUr DESC LIMIT 5;
+
+#Zad4 
+a) SELECT DISTINCT rodzaj FROM kreatura;
+b) SELECT CONCAT(nazwa, ' - ', rodzaj) FROM kreatura WHERE rodzaj LIKE 'wi%';
+c) SELECT nazwa, waga*ilosc FROM zasob WHERE year(dataPozyskania) BETWEEN 2000 AND 2007;
+   SELECT nazwa, waga*ilosc FROM zasob WHERE dataPozyskania BETWEEN '2000-01-01' AND '2007-12-31';
+
+#Zad5 
+a) SELECT CONCAT(nazwa,' ',waga*ilosc*0.7,' odpad to ',waga*ilosc*0.3) FROM zasob WHERE rodzaj='jedzenie';
+b) SELECT * FROM zasob WHERE rodzaj IS NULL;
+c) SELECT DISTINCT nazwa,rodzaj FROM zasob WHERE nazwa LIKE 'Ba%' OR nazwa LIKE '%os' ORDER BY nazwa;
+
+### lab 06 ###
+
+#Zad1
+1) SELECT AVG(waga) FROM kreatura WHERE rodzaj='wiking';
+2) SELECT rodzaj, COUNT(*), ANG(waga) FROM kreatura GROUP BY rodzaj;
+3) SELECT AVG(2020-year(dataUr)) AS wiek FROM kreatura GROUP BY rodzaj;
+
+#Zad2
+1) SELECT SUM(udzwig), rodzaj FROM kreatura GROUP BY rodzaj;
+2) SELECT nazwa, AVGS(waga) FROM zasob WHERE ilosc >=4 GROUP BY nazwa HAVING SUM(waga)>10;
+3) SELECT rodzaj, COUNT(*) FROM zasob GROUP BY rodzaj;
+   SELECT rodzaj, COUNT(DISTINCT(nazwa)) FROM zasob GROUP BY rodzaj;
+   SELECT rodzaj, COUNT(DISTINCT(nazwa)) AS liczba FROM zasob GROUP BY rodzaj HAVING liczba>1;
+
+#Zad3
+1) SELECT nazwa, idZasobu, ilosc FROM kreatura k, ekwipunek e WHERE k.idKreatury=e.idKreatury;
+2) SELECT * FROM kreatura k, ekwipunek e, zasob z WHERE k.idKreatury=e.idKreatury AND k.idKreatury=z.idZasobu;
+   SELECT k.nazwa, z.nazwa FROM kreatura k, ekwipunek e, zasob z WHERE k.idKreatury=e.idKreatury AND k.idKreatury=z.idZasobu;
+3) SELECT k.idKreatury, k.nazwa FROM kreatura k WHERE k.idKreatury NOT IN(SELECT idKreatury FROM ekwipunek WHERE idKreatury IS NOT NULL);
+
+#Zad4
+a)  SELECT * FROM zasob z, kreatura NATURAL JOIN ekwipunek WHERE kreatura.rodzaj='wiking' AND YEAR(kreatura.dataUr) BETWEEN 1670 AND 1679 AND z.idZasobu=ekwipunek.idZasobu;
+    SELECT * FROM zasob z, kreatura NATURAL JOIN ekwipunek WHERE kreatura.rodzaj='wiking' AND YEAR(kreatura.dataUr) BETWEEN 1670 AND 1679 AND z.idZasobu=ekwipunek.idZasobu AND kreatura.idKreatury=ekwipunek.idKreatury;
+    SELECT k.nazwa, z.nazwa FROM kreatura k, zasob z NATURAL JOIN ekwipunek WHERE YEAR (k.dataUr) LIKE '167%' AND k.rodzaj='wiking';
+b)  SELECT k.nazwa FROM kreatura k LEFT JOIN ekwipunek e ON k.idKreatury=e.idKreatury INNEJ JOIN zasob z ON e.idZasobu=z.idZasobu WHERE z.rodzaj='jedzenie' ORDER BY dataUr DESC LIMIT 5;
+c)  
+
+
+#Zad5
+1) SELECT k.rodzaj,AVG(z.waga) FROM kreatura k,ekwipunek e, zasob z WHERE k.idKreatury=e.idKreatury AND e.idZasobu=z.idZasobu AND k.rodzaj!='malpa' AND k.rodzaj!='waz'GROUP BY k.rodzaj HAVING SUM(e.ilosc)<30
+   SELECT k.rodzaj, AVG(e.ilosc *z.waga) FROM kreatura AS k, ekwipunek AS e, zasob AS z WHERE k.idKreatury=e.idKreatury AND e.idZasobu=z.idZasobu AND k.rodzaj NOT IN('malpa','waz')GROUP BY rodzaj
+HAVING SUM(e.ilosc) < 30
+2) SELECT DISTINCT k.rodzaj,
+(SELECT CONCAT(k2.nazwa, " - " , k2.dataUr) FROM kreatura k2 WHERE k.rodzaj=k2.rodzaj ORDER BY k2.dataUr LIMIT 1) AS najstarsze,
+(SELECT CONCAT(k2.nazwa, " - " , k2.dataUr) FROM kreatura k2 WHERE k.rodzaj=k2.rodzaj ORDER BY k2.dataUr DESC LIMIT 1) AS najmlodsze
+FROM kreatura k
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
